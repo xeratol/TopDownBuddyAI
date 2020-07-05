@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
-    private NavMeshAgent _agent;
+    private NavMeshAgent _agent = null;
 
     void Start()
     {
@@ -15,20 +15,12 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        //if (Input.GetMouseButton(0))
-        //{
-        //    var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //    var plane = new Plane(Vector3.up, Vector3.zero);
-        //    var t = 0.0f;
-        //    if (plane.Raycast(ray, out t))
-        //    {
-        //        var point = ray.GetPoint(t);
-        //        _agent.SetDestination(point);
-        //    }
-        //}
-
         UpdatePosition();
+        UpdateRotation();
+    }
 
+    private void UpdateRotation()
+    {
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var plane = new Plane(Vector3.up, new Vector3(0, transform.position.y, 0));
         var t = 0.0f;
