@@ -19,6 +19,8 @@ public class BuddyBehavior : MonoBehaviour
 
     private Vector3 _destination;
 
+    private Vector3 _lastRecordedPlayerPosition;
+
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
@@ -26,6 +28,7 @@ public class BuddyBehavior : MonoBehaviour
         Debug.Assert(_playerInfo, "Player Info not set", this);
 
         _destination = _player.position;
+        _lastRecordedPlayerPosition = _player.position;
     }
 
     void Update()
@@ -44,32 +47,39 @@ public class BuddyBehavior : MonoBehaviour
             var distanceToPlayerSq = (_player.position - _destination).sqrMagnitude;
             if (distanceToPlayerSq > maxDistance * maxDistance || distanceToPlayerSq < minDistance * minDistance)
             {
-                var randomDistance = Random.Range(minDistance, maxDistance);
-
-                var randomAngle = Random.Range(Mathf.PI * 0.25f, Mathf.PI * 0.75f);
-
-                var forward = transform.position - _player.position;
-                forward.Normalize();
-                var right = Vector3.Cross(Vector3.up, forward);
-
-                var direction = forward * Mathf.Sin(randomAngle) + right * Mathf.Cos(randomAngle);
-                _destination = _player.position + direction * randomDistance;
-                _agent.SetDestination(_destination);
+                //MoveToRandomPointNearPlayer();
+                FollowPlayer();
             }
         }
     }
 
-    private void OnDrawGizmosSelected()
+    private void FollowPlayer()
     {
 
+    }
+
+    private void MoveToRandomPointNearPlayer()
+    {
+        var randomDistance = Random.Range(minDistance, maxDistance);
+        var randomAngle = Random.Range(Mathf.PI * 0.25f, Mathf.PI * 0.75f);
+
+        var forwardAxis = transform.position - _player.position;
+        forwardAxis.Normalize();
+        var rightAxis = Vector3.Cross(Vector3.up, forwardAxis);
+
+        var direction = forwardAxis * Mathf.Sin(randomAngle) + rightAxis * Mathf.Cos(randomAngle);
+        _destination = _player.position + direction * randomDistance;
+        _agent.SetDestination(_destination);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
         var angles = new List<float>();
         for (var i = 0; i <= 16; ++i)
         {
             var angle = i * Mathf.PI * 0.125f;
             angles.Add(angle);
         }
-
-        var temp = Gizmos.color;
 
         for (var i = 0; i < 16; ++i)
         {
@@ -85,7 +95,5 @@ public class BuddyBehavior : MonoBehaviour
 
         Gizmos.color = Color.magenta;
         Gizmos.DrawCube(_destination, Vector3.one * 0.5f);
-
-        Gizmos.color = temp;
     }
 }
