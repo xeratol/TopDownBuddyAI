@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -14,6 +15,9 @@ public class PlayerInfo : MonoBehaviour
     public float idleTime = 3.0f;
     private float _lastMovementTime = 0;
     public bool IsIdle { get; private set; } = false;
+
+    public bool IsMoving { get; private set; } = false;
+
     private Vector3 _lastPosition;
 
     void Start()
@@ -26,13 +30,19 @@ public class PlayerInfo : MonoBehaviour
 
     void Update()
     {
+        UpdateMoving();
         UpdateHiding();
         UpdateIdle();
     }
 
+    private void UpdateMoving()
+    {
+        IsMoving = (_lastPosition - transform.position).sqrMagnitude > 0.001f;
+    }
+
     private void UpdateIdle()
     {
-        if ((_lastPosition - transform.position).sqrMagnitude > 0.001f)
+        if (IsMoving)
         {
             _lastMovementTime = Time.time;
             IsIdle = false;

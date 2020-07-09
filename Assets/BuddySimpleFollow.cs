@@ -14,7 +14,19 @@ public class BuddySimpleFollow : MonoBehaviour
     [SerializeField]
     private PlayerInfo _playerInfo = null;
 
-    public float distanceFromPlayer = 4;
+    public float followingDistance = 4;
+
+    [Tooltip("Distance to wander around from current position")]
+    public float wanderDistance = 1.0f;
+    [Tooltip("Minimum distance from player while wandering")]
+    public float wanderMinDistance = 2.0f;
+    [Tooltip("Maximum distance from player while wandering")]
+    public float wanderMaxDistance = 6.0f;
+    [Tooltip("Minimum time between wander")]
+    public float wanderMinIntervalTime = 1.0f;
+    [Tooltip("Maximum time between wander")]
+    public float wanderMaxIntervalTime = 4.0f;
+    private float _lastWanderTimer = 0;
 
     private Vector3 _destination;
 
@@ -29,21 +41,41 @@ public class BuddySimpleFollow : MonoBehaviour
     {
         if (_playerInfo.IsIdle)
         {
-            return;
+            if (_agent.velocity.sqrMagnitude < 0.001f && _lastWanderTimer <= 0)
+            {
+                var destination = GetWanderDestination();
+                if (IsValidWanderDestination(destination))
+                {
+                    _destination = destination;
+                    _agent.SetDestination(_destination);
+                    _lastWanderTimer = Random.Range(wanderMinIntervalTime, wanderMaxIntervalTime);
+                }
+            }
+            _lastWanderTimer -= Time.deltaTime;
         }
-
-        var destinationUpdated = false;
-        var target = _player.position + (transform.position - _player.position).normalized * distanceFromPlayer;
-        if ((target - _destination).sqrMagnitude > 0.1f)
+        else if (_playerInfo.IsMoving)
         {
-            _destination = target;
-            destinationUpdated = true;
+            _lastWanderTimer = 0;
+            var target = _player.position + (transform.position - _player.position).normalized * followingDistance;
+            if ((target - _destination).sqrMagnitude > 0.1f)
+            {
+                _destination = target;
+                _agent.SetDestination(_destination);
+            }
         }
+    }
 
-        if (destinationUpdated)
-        {
-            _agent.SetDestination(_destination);
-        }
+    private Vector3 GetWanderDestination()
+    {
+        var randomAngle = Random.Range(0, Mathf.PI * 2);
+        return transform.position + new Vector3(Mathf.Cos(randomAngle), 0, Mathf.Sin(randomAngle)) * wanderDistance;
+    }
+
+    private bool IsValidWanderDestination(Vector3 destination)
+    {
+        var distanceToPlayerSq = (destination - _player.position).sqrMagnitude;
+        return distanceToPlayerSq >= wanderMinDistance * wanderMinDistance &&
+            distanceToPlayerSq <= wanderMaxDistance * wanderMaxDistance;
     }
 
     private void OnDrawGizmosSelected()

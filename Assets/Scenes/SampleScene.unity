@@ -3080,9 +3080,7 @@ GameObject:
   - component: {fileID: 1309432356}
   - component: {fileID: 1309432355}
   - component: {fileID: 1309432359}
-  - component: {fileID: 1309432360}
   - component: {fileID: 1309432361}
-  - component: {fileID: 1309432362}
   m_Layer: 11
   m_Name: Buddy
   m_TagString: Untagged
@@ -3188,23 +3186,6 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &1309432360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1309432354}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c245471f195f174eb81f46b11c4ac4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _agent: {fileID: 1309432359}
-  _player: {fileID: 1662171006}
-  _playerInfo: {fileID: 1662171009}
-  minDistance: 2
-  maxDistance: 6
 --- !u!114 &1309432361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3220,27 +3201,12 @@ MonoBehaviour:
   _agent: {fileID: 1309432359}
   _player: {fileID: 1662171006}
   _playerInfo: {fileID: 1662171009}
-  distanceFromPlayer: 4
---- !u!114 &1309432362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1309432354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d072df895b7d2a441bf1404930769d6f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _agent: {fileID: 1309432359}
-  _player: {fileID: 1662171006}
-  _playerInfo: {fileID: 1662171009}
-  wanderDistance: 2
-  minDistance: 2
-  maxDistance: 6
-  minIntervalTime: 1
-  maxIntervalTime: 2
+  followingDistance: 4
+  wanderDistance: 1
+  wanderMinDistance: 2
+  wanderMaxDistance: 6
+  wanderMinIntervalTime: 1
+  wanderMaxIntervalTime: 4
 --- !u!1 &1405651222
 GameObject:
   m_ObjectHideFlags: 0
