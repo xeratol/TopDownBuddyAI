@@ -16,6 +16,9 @@ public class BuddySimpleFollow : MonoBehaviour
 
     public float followingDistance = 4;
 
+    public float normalSpeed = 5;
+    public float lostSpeed = 8;
+
     [Tooltip("Distance to wander around from current position")]
     public float wanderDistance = 1.0f;
     [Tooltip("Minimum distance from player while wandering")]
@@ -28,51 +31,109 @@ public class BuddySimpleFollow : MonoBehaviour
     public float wanderMaxIntervalTime = 4.0f;
     private float _lastWanderTimer = 0;
 
+    private Vector3 _lastKnownPlayerPosition;
     private Vector3 _destination;
+
+    private enum BuddyState
+    {
+        Follow,
+        Wander,
+        Lost,
+    }
+    private BuddyState _state = BuddyState.Follow;
 
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
         Debug.Assert(_player, "Player not set", this);
         Debug.Assert(_playerInfo, "Player Info not set", this);
+
+        _lastKnownPlayerPosition = _player.position;
     }
 
     void Update()
     {
-        if (_playerInfo.IsIdle)
+        if (IsPlayerVisibile())
         {
-            if (_agent.velocity.sqrMagnitude < 0.001f && _lastWanderTimer <= 0)
+            _agent.speed = normalSpeed;
+            _lastKnownPlayerPosition = _player.position;
+
+            if (_playerInfo.IsIdle && _state != BuddyState.Lost)
             {
-                var destination = GetWanderDestination();
-                if (IsValidWanderDestination(destination))
+                if (_agent.remainingDistance < 0.1f && _lastWanderTimer <= 0)
                 {
-                    _destination = destination;
+                    var target = GetWanderDestination();
+                    if (IsValidWanderDestination(target))
+                    {
+                        _destination = target;
+                        _agent.SetDestination(_destination);
+                        _lastWanderTimer = Random.Range(wanderMinIntervalTime, wanderMaxIntervalTime);
+                        _state = BuddyState.Wander;
+                    }
+                }
+                _lastWanderTimer -= Time.deltaTime;
+            }
+            else //if (_playerInfo.IsMoving)
+            {
+                _lastWanderTimer = 0;
+                var target = GetFollowDestination();
+                if (IsValidFollowDestination(target))
+                {
+                    _destination = target;
                     _agent.SetDestination(_destination);
-                    _lastWanderTimer = Random.Range(wanderMinIntervalTime, wanderMaxIntervalTime);
+                    _state = BuddyState.Follow;
                 }
             }
-            _lastWanderTimer -= Time.deltaTime;
         }
-        else if (_playerInfo.IsMoving)
+        else
         {
-            _lastWanderTimer = 0;
-            var target = _player.position + (transform.position - _player.position).normalized * followingDistance;
-            if ((target - _destination).sqrMagnitude > 0.1f)
+            _agent.speed = lostSpeed;
+
+            if (_state != BuddyState.Lost)
             {
-                _destination = target;
+                _destination = _lastKnownPlayerPosition;
+                _agent.SetDestination(_destination);
+                _state = BuddyState.Lost;
+            }
+            else if (_agent.remainingDistance < followingDistance * 0.5f)
+            {
+                _destination = _player.position;
                 _agent.SetDestination(_destination);
             }
         }
     }
 
+    private Vector3 GetFollowDestination()
+    {
+        var target = _player.position + (transform.position - _player.position).normalized * followingDistance;
+
+        NavMeshHit hit;
+        return _agent.Raycast(target, out hit) ? hit.position : target;
+    }
+
+    private bool IsValidFollowDestination(Vector3 target)
+    {
+        return (target - _destination).sqrMagnitude > 0.1f;
+    }
+
     private Vector3 GetWanderDestination()
     {
         var randomAngle = Random.Range(0, Mathf.PI * 2);
-        return transform.position + new Vector3(Mathf.Cos(randomAngle), 0, Mathf.Sin(randomAngle)) * wanderDistance;
+        var target = transform.position + new Vector3(Mathf.Cos(randomAngle), 0, Mathf.Sin(randomAngle)) * wanderDistance;
+
+        NavMeshHit hit;
+        return _agent.Raycast(target, out hit) ? hit.position : target;
     }
 
     private bool IsValidWanderDestination(Vector3 destination)
     {
+        NavMeshHit hit;
+        var blocked = NavMesh.Raycast(_player.position, destination, out hit, NavMesh.AllAreas);
+        if (blocked)
+        {
+            return false;
+        }
+
         var distanceToPlayerSq = (destination - _player.position).sqrMagnitude;
         return distanceToPlayerSq >= wanderMinDistance * wanderMinDistance &&
             distanceToPlayerSq <= wanderMaxDistance * wanderMaxDistance;
@@ -82,5 +143,12 @@ public class BuddySimpleFollow : MonoBehaviour
     {
         Gizmos.color = Color.magenta;
         Gizmos.DrawCube(_destination, Vector3.one * 0.5f);
+    }
+
+    private bool IsPlayerVisibile()
+    {
+        NavMeshHit hit;
+        var blocked =  _agent.Raycast(_player.position, out hit);
+        return !blocked;
     }
 }
