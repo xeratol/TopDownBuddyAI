@@ -147,8 +147,16 @@ public class BuddySimpleFollow : MonoBehaviour
 
     private bool IsPlayerVisibile()
     {
-        NavMeshHit hit;
-        var blocked =  _agent.Raycast(_player.position, out hit);
-        return !blocked;
+        RaycastHit hit;
+        if (Physics.Linecast(transform.position, _player.position, out hit, LayerMask.GetMask("Wall")))
+        {
+            Debug.DrawLine(transform.position, hit.point);
+            return false;
+        }
+        return true;
+
+        //NavMeshHit hit;
+        //var visible =  !_agent.Raycast(_player.position, out hit);
+        //return visible || (hit.position - _player.position).sqrMagnitude <= 2.0f;
     }
 }
