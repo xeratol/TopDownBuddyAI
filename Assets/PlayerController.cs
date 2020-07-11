@@ -47,24 +47,24 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.A))
         {
-            desiredMovement += _agent.speed * Vector3.left * Time.deltaTime;
+            desiredMovement += Vector3.left;
         }
 
         if (Input.GetKey(KeyCode.D))
         {
-            desiredMovement += _agent.speed * Vector3.right * Time.deltaTime;
+            desiredMovement += Vector3.right;
         }
 
         if (Input.GetKey(KeyCode.W))
         {
-            desiredMovement += _agent.speed * Vector3.forward * Time.deltaTime;
+            desiredMovement += Vector3.forward;
         }
 
         if (Input.GetKey(KeyCode.S))
         {
-            desiredMovement += _agent.speed * Vector3.back * Time.deltaTime;
+            desiredMovement += Vector3.back;
         }
 
-        _agent.Move(desiredMovement);
+        _agent.Move(_agent.speed * desiredMovement * Time.deltaTime);
     }
 }
