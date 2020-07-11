@@ -8,15 +8,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private NavMeshAgent _agent = null;
 
+    [SerializeField]
+    private GunBehavior _gun = null;
+
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
+        Debug.Assert(_gun, "Gun not set", this);
     }
 
     void Update()
     {
         UpdatePosition();
         UpdateRotation();
+
+        if (Input.GetMouseButton(0))
+        {
+            _gun.Fire();
+        }
     }
 
     private void UpdateRotation()

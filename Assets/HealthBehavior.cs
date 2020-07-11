@@ -17,7 +17,7 @@ public class HealthBehavior : MonoBehaviour
             if (_health < 0 )
             {
                 _health = 0;
-                OnDieListener?.Invoke();
+                OnDeathListener?.Invoke();
             }
             else if (_health > maxHealth)
             {
@@ -26,7 +26,7 @@ public class HealthBehavior : MonoBehaviour
         }
     }
 
-    public event Action OnDieListener;
+    public event Action OnDeathListener;
 
     void Start()
     {

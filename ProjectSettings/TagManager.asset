@@ -16,11 +16,11 @@ TagManager:
   - Player
   - Floor
   - Wall
-  - AI
-  - 
-  - 
-  - 
-  - 
+  - BuddyAI
+  - PlayerBullet
+  - BuddyBullet
+  - EnemyBullet
+  - EnemyAI
   - 
   - 
   - 
