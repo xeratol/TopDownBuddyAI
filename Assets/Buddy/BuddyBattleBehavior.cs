@@ -22,7 +22,10 @@ public class BuddyBattleBehavior : MonoBehaviour
     [Min(1.0f)]
     public float maxDistanceToPlayer = 8.0f;
 
-    //private Vector3 _lastKnownPlayerPosition;
+    [Min(1.0f)]
+    public float healAmount = 50.0f;
+
+    private Vector3 _lastTargetPlayerPosition;
 
     readonly Vector3[] relTargetPos = 
     {
@@ -42,19 +45,42 @@ public class BuddyBattleBehavior : MonoBehaviour
         Debug.Assert(_player, "Player not set", this);
         Debug.Assert(_playerInfo, "Player Info not set", this);
 
-        //_lastKnownPlayerPosition = _player.position;
+        _lastTargetPlayerPosition = _player.position;
     }
 
     private void Update()
     {
-        if (!IsWithinProximityOfPlayer(transform.position))
+        if (_playerInfo.IsCriticalHealth)
         {
-            var possiblePositions = ScanAreaAroundPlayer();
-            if (possiblePositions.Count > 0)
+            _agent.SetDestination(_player.position);
+            //if ((_player.position - _lastTargetPlayerPosition).sqrMagnitude > 1.0f)
+            //{
+            //    _lastTargetPlayerPosition = _player.position;
+            //    _agent.SetDestination(_lastTargetPlayerPosition);
+            //}
+
+            var distSq = (_player.position - transform.position).sqrMagnitude;
+            if (distSq < minDistanceToPlayer * minDistanceToPlayer)
             {
-                var destination = FindClosestPosition(possiblePositions);
-                _agent.SetDestination(destination);
+                var playerHealth = _player.GetComponent<HealthBehavior>();
+                playerHealth.health += healAmount;
+
+                FindNewPosition();
             }
+        }
+        else if (!IsWithinProximityOfPlayer(transform.position))
+        {
+            FindNewPosition();
+        }
+    }
+
+    private void FindNewPosition()
+    {
+        var possiblePositions = ScanAreaAroundPlayer();
+        if (possiblePositions.Count > 0)
+        {
+            var destination = FindClosestPosition(possiblePositions, transform.position);
+            _agent.SetDestination(destination);
         }
     }
 
@@ -97,7 +123,7 @@ public class BuddyBattleBehavior : MonoBehaviour
             distSq < maxDistanceToPlayer * maxDistanceToPlayer;
     }
 
-    Vector3 FindClosestPosition(List<Vector3> positions)
+    Vector3 FindClosestPosition(List<Vector3> positions, Vector3 target)
     {
         Debug.Assert(positions.Count > 0, "Invalid parameter", this);
 
@@ -105,7 +131,7 @@ public class BuddyBattleBehavior : MonoBehaviour
         var closestPos = Vector3.zero;
         foreach (var pos in positions)
         {
-            var distSq = (pos - transform.position).sqrMagnitude;
+            var distSq = (pos - target).sqrMagnitude;
             if (distSq < minDistSq)
             {
                 minDistSq = distSq;

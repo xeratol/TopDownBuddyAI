@@ -108,6 +108,7 @@ GameObject:
   - component: {fileID: 562765050065054719}
   - component: {fileID: 562765050065054716}
   - component: {fileID: 562765050065054717}
+  - component: {fileID: 7907030132978632944}
   m_Layer: 15
   m_Name: Enemy
   m_TagString: Untagged
@@ -201,7 +202,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5000001
-  m_Speed: 4
+  m_Speed: 2
   m_Acceleration: 20
   avoidancePriority: 50
   m_AngularSpeed: 360
@@ -239,3 +240,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _healthBehavior: {fileID: 562765050065054716}
+--- !u!114 &7907030132978632944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562765050065054714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a2ec76565069e04f95507ef38d44db2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 1792575732070037237, guid: e1f15de34e6305246aa8555a8f565a38,
+    type: 3}
+  fireRate: 1
+  spreadDegrees: 5

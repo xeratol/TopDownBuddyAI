@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HealthBehavior : MonoBehaviour
 {
@@ -23,8 +25,15 @@ public class HealthBehavior : MonoBehaviour
             {
                 _health = maxHealth;
             }
+
+            if (_image)
+            {
+                _image.fillAmount = _health / maxHealth;
+            }
         }
     }
+
+    public Image _image = null;
 
     public event Action OnDeathListener;
 

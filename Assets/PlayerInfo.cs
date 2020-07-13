@@ -9,6 +9,9 @@ public class PlayerInfo : MonoBehaviour
     [SerializeField]
     private NavMeshAgent _agent = null;
 
+    [SerializeField]
+    private HealthBehavior _health = null;
+
     public float maxDistanceToHide = 0.5f;
     public bool IsHiding { get; private set; } = false;
 
@@ -17,6 +20,10 @@ public class PlayerInfo : MonoBehaviour
     public bool IsIdle { get; private set; } = false;
 
     public bool IsMoving { get; private set; } = false;
+
+    [Tooltip("Percent of max health used as threshold"), Min(0.01f)]
+    public float criticalHealthThreshold = 0.2f;
+    public bool IsCriticalHealth { get; private set; } = false;
 
     private Vector3 _lastPosition;
 
@@ -33,6 +40,12 @@ public class PlayerInfo : MonoBehaviour
         UpdateMoving();
         UpdateHiding();
         UpdateIdle();
+        UpdateCriticalHealth();
+    }
+
+    private void UpdateCriticalHealth()
+    {
+        IsCriticalHealth = _health && _health.health < _health.maxHealth * criticalHealthThreshold;
     }
 
     private void UpdateMoving()

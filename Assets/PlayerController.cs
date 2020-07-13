@@ -11,10 +11,23 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private GunBehavior _gun = null;
 
+    public static PlayerController instance { get; private set; } = null;
+
+    void Awake()
+    {
+        Debug.Assert(!instance, "More than one player instance exists", this);
+        instance = this;
+    }
+
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
         Debug.Assert(_gun, "Gun not set", this);
+    }
+
+    void OnDestroy()
+    {
+        instance = null;
     }
 
     void Update()
