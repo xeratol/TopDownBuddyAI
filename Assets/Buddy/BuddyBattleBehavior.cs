@@ -39,6 +39,14 @@ public class BuddyBattleBehavior : MonoBehaviour
         new Vector3(-0.7071f, 0, 0.7071f),
     };
 
+    private enum BuddyState
+    {
+        Hiding,
+        Healing,
+        Attacking,
+    }
+    private BuddyState _state = BuddyState.Hiding;
+
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
@@ -50,27 +58,43 @@ public class BuddyBattleBehavior : MonoBehaviour
 
     private void Update()
     {
-        if (_playerInfo.IsCriticalHealth)
+        if (_state == BuddyState.Healing)
         {
-            _agent.SetDestination(_player.position);
-            //if ((_player.position - _lastTargetPlayerPosition).sqrMagnitude > 1.0f)
-            //{
-            //    _lastTargetPlayerPosition = _player.position;
-            //    _agent.SetDestination(_lastTargetPlayerPosition);
-            //}
-
-            var distSq = (_player.position - transform.position).sqrMagnitude;
-            if (distSq < minDistanceToPlayer * minDistanceToPlayer)
+            if (!_playerInfo.IsCriticalHealth)
             {
-                var playerHealth = _player.GetComponent<HealthBehavior>();
-                playerHealth.health += healAmount;
+                _state = BuddyState.Hiding;
+            }
+            else
+            {
+                if ((_player.position - _lastTargetPlayerPosition).sqrMagnitude > 0.1f)
+                {
+                    _lastTargetPlayerPosition = _player.position;
+                    _agent.SetDestination(_lastTargetPlayerPosition);
+                }
 
-                FindNewPosition();
+                var distSq = (_player.position - transform.position).sqrMagnitude;
+                if (distSq < minDistanceToPlayer * minDistanceToPlayer)
+                {
+                    var playerHealth = _player.GetComponent<HealthBehavior>();
+                    playerHealth.health += healAmount;
+
+                    FindNewPosition();
+                }
             }
         }
-        else if (!IsWithinProximityOfPlayer(transform.position))
+        else if (_state == BuddyState.Hiding)
         {
-            FindNewPosition();
+            if (_playerInfo.IsCriticalHealth)
+            {
+                _state = BuddyState.Healing;
+                _lastTargetPlayerPosition = _player.position;
+                _agent.SetDestination(_lastTargetPlayerPosition);
+            }
+            else if(!IsWithinProximityOfPlayer(transform.position))
+            {
+                _lastTargetPlayerPosition = _player.position;
+                FindNewPosition();
+            }
         }
     }
 
