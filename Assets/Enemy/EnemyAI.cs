@@ -14,6 +14,17 @@ public class EnemyAI : MonoBehaviour
     private Transform _player;
     private Vector3 _lastKnownPlayerPosition;
 
+    public static List<EnemyAI> Instances { get; private set; } = null;
+
+    private void Awake()
+    {
+        if (Instances == null)
+        {
+            Instances = new List<EnemyAI>();
+        }
+        Instances.Add(this);
+    }
+
     void Start()
     {
         Debug.Assert(_agent, "Agent not set", this);
@@ -22,6 +33,11 @@ public class EnemyAI : MonoBehaviour
 
         _player = PlayerController.instance.transform;
         _lastKnownPlayerPosition = transform.position;
+    }
+
+    private void OnDestroy()
+    {
+        Instances.Remove(this);
     }
 
     void Update()

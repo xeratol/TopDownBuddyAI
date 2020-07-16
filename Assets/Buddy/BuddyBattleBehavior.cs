@@ -14,6 +14,9 @@ public class BuddyBattleBehavior : MonoBehaviour
     [SerializeField]
     private PlayerInfo _playerInfo = null;
 
+    [SerializeField]
+    private GunBehavior _gun = null;
+
     [Min(0.5f)]
     public float scanDistance = 5.0f;
 
@@ -39,6 +42,8 @@ public class BuddyBattleBehavior : MonoBehaviour
         new Vector3(-0.7071f, 0, 0.7071f),
     };
 
+    private Transform _targetEnemy = null;
+
     private enum BuddyState
     {
         Hiding,
@@ -52,6 +57,7 @@ public class BuddyBattleBehavior : MonoBehaviour
         Debug.Assert(_agent, "Agent not set", this);
         Debug.Assert(_player, "Player not set", this);
         Debug.Assert(_playerInfo, "Player Info not set", this);
+        Debug.Assert(_gun, "Gun not set", this);
 
         _lastTargetPlayerPosition = _player.position;
     }
@@ -82,6 +88,37 @@ public class BuddyBattleBehavior : MonoBehaviour
                 }
             }
         }
+        else if (_state == BuddyState.Attacking)
+        {
+            if (_playerInfo.IsCriticalHealth)
+            {
+                _state = BuddyState.Healing;
+                _lastTargetPlayerPosition = _player.position;
+                _agent.SetDestination(_lastTargetPlayerPosition);
+                _agent.updateRotation = true;
+            }
+            else if (_targetEnemy != null && IsVisibile(_targetEnemy.position))
+            {
+                var desiredRot = Quaternion.LookRotation(_targetEnemy.position - transform.position);
+                var angle = Quaternion.Angle(transform.rotation, desiredRot);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, desiredRot, _agent.angularSpeed * Time.deltaTime);
+
+                if (angle < 5.0f)
+                {
+                    _gun.Fire();
+                }
+
+                if (_agent.remainingDistance < 0.2f)
+                {
+                    FindNewPosition(false);
+                }
+            }
+            else
+            {
+                _state = BuddyState.Hiding;
+                _agent.updateRotation = true;
+            }
+        }
         else if (_state == BuddyState.Hiding)
         {
             if (_playerInfo.IsCriticalHealth)
@@ -90,17 +127,28 @@ public class BuddyBattleBehavior : MonoBehaviour
                 _lastTargetPlayerPosition = _player.position;
                 _agent.SetDestination(_lastTargetPlayerPosition);
             }
-            else if(!IsWithinProximityOfPlayer(transform.position))
+            else
             {
-                _lastTargetPlayerPosition = _player.position;
-                FindNewPosition();
+                var visibleEnemies = GetVisibileEnemies();
+                if (visibleEnemies.Count > 0)
+                {
+                    _state = BuddyState.Attacking;
+                    _targetEnemy = FindEnemyToAttack(visibleEnemies).transform;
+                    _agent.updateRotation = false;
+                }
+
+                if (!IsWithinProximityOfPlayer(transform.position))
+                {
+                    _lastTargetPlayerPosition = _player.position;
+                    FindNewPosition();
+                }
             }
         }
     }
 
-    private void FindNewPosition()
+    private void FindNewPosition(bool allowNearCurrent = true)
     {
-        var possiblePositions = ScanAreaAroundPlayer();
+        var possiblePositions = ScanAreaAroundPlayer(allowNearCurrent);
         if (possiblePositions.Count > 0)
         {
             var destination = FindClosestPosition(possiblePositions, transform.position);
@@ -108,7 +156,7 @@ public class BuddyBattleBehavior : MonoBehaviour
         }
     }
 
-    List<Vector3> ScanAreaAroundPlayer()
+    List<Vector3> ScanAreaAroundPlayer(bool allowNearCurrent = true)
     {
         var possiblePositions = new List<Vector3>();
         foreach (var relPos in relTargetPos)
@@ -117,14 +165,17 @@ public class BuddyBattleBehavior : MonoBehaviour
             NavMeshHit hit;
 
             var scanHitSomething = NavMesh.Raycast(_player.position, targetPos, out hit, NavMesh.AllAreas);
-            var scanHistDistanceAllowed = scanHitSomething && IsWithinProximityOfPlayer(hit.position);
+            var scanHitDistanceAllowed = scanHitSomething && IsWithinProximityOfPlayer(hit.position);
 
-            if (scanHistDistanceAllowed)
+            if (scanHitDistanceAllowed)
             {
                 Debug.DrawLine(_player.position, hit.position);
-                possiblePositions.Add(hit.position);
+                if (allowNearCurrent || (hit.position - transform.position).sqrMagnitude > 1.0f)
+                {
+                    possiblePositions.Add(hit.position);
+                }
             }
-            else if (scanHitSomething && !scanHistDistanceAllowed)
+            else if (scanHitSomething && !scanHitDistanceAllowed)
             {
                 continue;
             }
@@ -134,7 +185,10 @@ public class BuddyBattleBehavior : MonoBehaviour
             {
                 Debug.DrawLine(_player.position, targetPos, Color.blue);
                 Debug.DrawLine(targetPos, hit.position, Color.yellow);
-                possiblePositions.Add(hit.position);
+                if (allowNearCurrent || (hit.position - transform.position).sqrMagnitude > 1.0f)
+                {
+                    possiblePositions.Add(hit.position);
+                }
             }
         }
         return possiblePositions;
@@ -164,5 +218,47 @@ public class BuddyBattleBehavior : MonoBehaviour
         }
 
         return closestPos;
+    }
+
+    List<EnemyAI> GetVisibileEnemies()
+    {
+        var list = new List<EnemyAI>();
+        foreach (var enemy in EnemyAI.Instances)
+        {
+            var enemyPosition = enemy.transform.position;
+            RaycastHit hit;
+            if (!Physics.Linecast(transform.position, enemyPosition, out hit, LayerMask.GetMask("Wall")))
+            {
+                list.Add(enemy);
+            }
+        }
+
+        return list;
+    }
+
+    EnemyAI FindEnemyToAttack(List<EnemyAI> enemies)
+    {
+        EnemyAI target = null;
+        var targetDirDot = float.MinValue;
+
+        foreach (var enemy in enemies)
+        {
+            var dir = enemy.transform.position - transform.position;
+            dir.Normalize();
+            var dirDot = Vector3.Dot(dir, transform.forward);
+            if (dirDot > targetDirDot)
+            {
+                targetDirDot = dirDot;
+                target = enemy;
+            }
+        }
+
+        return target;
+    }
+
+    bool IsVisibile(Vector3 position)
+    {
+        RaycastHit hit;
+        return !Physics.Linecast(transform.position, position, out hit, LayerMask.GetMask("Wall"));
     }
 }
