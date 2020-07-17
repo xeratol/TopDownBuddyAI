@@ -52,6 +52,8 @@ public class BuddySimpleFollow : MonoBehaviour
 
     void Update()
     {
+        Debug.DrawLine(transform.position, _destination, Color.magenta);
+
         if (IsPlayerVisibile())
         {
             _agent.speed = normalSpeed;
@@ -124,7 +126,7 @@ public class BuddySimpleFollow : MonoBehaviour
 
     private bool IsValidFollowDestination(Vector3 target)
     {
-        return (target - _destination).sqrMagnitude > 0.1f;
+        return (target - _destination).sqrMagnitude > 0.5f;
     }
 
     private Vector3 GetWanderDestination()
@@ -148,12 +150,6 @@ public class BuddySimpleFollow : MonoBehaviour
         var distanceToPlayerSq = (destination - _player.position).sqrMagnitude;
         return distanceToPlayerSq >= wanderMinDistance * wanderMinDistance &&
             distanceToPlayerSq <= wanderMaxDistance * wanderMaxDistance;
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.magenta;
-        Gizmos.DrawCube(_destination, Vector3.one * 0.5f);
     }
 
     private bool IsPlayerVisibile()

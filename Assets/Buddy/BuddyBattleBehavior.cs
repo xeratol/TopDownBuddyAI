@@ -63,8 +63,19 @@ public class BuddyBattleBehavior : MonoBehaviour
         _lastTargetPlayerPosition = _player.position;
     }
 
+    private void OnEnable()
+    {
+    }
+
+    private void OnDisable()
+    {
+        _agent.updateRotation = true;
+    }
+
     private void Update()
     {
+        Debug.DrawLine(transform.position, _agent.destination, Color.magenta);
+
         if (_state == BuddyState.Healing)
         {
             if (!_playerInfo.IsCriticalHealth)
