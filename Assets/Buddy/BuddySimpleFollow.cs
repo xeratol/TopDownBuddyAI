@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
 
 public class BuddySimpleFollow : MonoBehaviour
@@ -34,13 +32,14 @@ public class BuddySimpleFollow : MonoBehaviour
     private Vector3 _lastKnownPlayerPosition;
     private Vector3 _destination;
 
-    private enum BuddyState
+    public enum BuddyState
     {
         Follow,
         Wander,
         Lost,
     }
     private BuddyState _state = BuddyState.Follow;
+    public event System.Action<BuddyState> OnStateChangeListener;
 
     void Start()
     {
@@ -68,7 +67,12 @@ public class BuddySimpleFollow : MonoBehaviour
                         _destination = target;
                         _agent.SetDestination(_destination);
                         _lastWanderTimer = Random.Range(wanderMinIntervalTime, wanderMaxIntervalTime);
-                        _state = BuddyState.Wander;
+
+                        if (_state != BuddyState.Wander)
+                        {
+                            _state = BuddyState.Wander;
+                            OnStateChangeListener?.Invoke(_state);
+                        }
                     }
                 }
                 _lastWanderTimer -= Time.deltaTime;
@@ -81,7 +85,12 @@ public class BuddySimpleFollow : MonoBehaviour
                 {
                     _destination = target;
                     _agent.SetDestination(_destination);
-                    _state = BuddyState.Follow;
+
+                    if (_state != BuddyState.Follow)
+                    {
+                        _state = BuddyState.Follow;
+                        OnStateChangeListener?.Invoke(_state);
+                    }
                 }
             }
         }
@@ -94,6 +103,7 @@ public class BuddySimpleFollow : MonoBehaviour
                 _destination = _lastKnownPlayerPosition;
                 _agent.SetDestination(_destination);
                 _state = BuddyState.Lost;
+                OnStateChangeListener?.Invoke(_state);
             }
             else if (_agent.remainingDistance < followingDistance * 0.5f)
             {
@@ -108,7 +118,8 @@ public class BuddySimpleFollow : MonoBehaviour
         var target = _player.position + (transform.position - _player.position).normalized * followingDistance;
 
         NavMeshHit hit;
-        return _agent.Raycast(target, out hit) ? hit.position : target;
+        //return _agent.Raycast(target, out hit) ? hit.position : target;
+        return NavMesh.SamplePosition(target, out hit, 2.0f, NavMesh.AllAreas) ? hit.position : target;
     }
 
     private bool IsValidFollowDestination(Vector3 target)

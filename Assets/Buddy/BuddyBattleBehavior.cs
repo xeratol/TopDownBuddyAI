@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -44,13 +44,14 @@ public class BuddyBattleBehavior : MonoBehaviour
 
     private Transform _targetEnemy = null;
 
-    private enum BuddyState
+    public enum BuddyState
     {
         Hiding,
         Healing,
         Attacking,
     }
     private BuddyState _state = BuddyState.Hiding;
+    public event Action<BuddyState> OnStateChangeListener;
 
     void Start()
     {
@@ -69,6 +70,7 @@ public class BuddyBattleBehavior : MonoBehaviour
             if (!_playerInfo.IsCriticalHealth)
             {
                 _state = BuddyState.Hiding;
+                OnStateChangeListener?.Invoke(_state);
             }
             else
             {
@@ -93,6 +95,7 @@ public class BuddyBattleBehavior : MonoBehaviour
             if (_playerInfo.IsCriticalHealth)
             {
                 _state = BuddyState.Healing;
+                OnStateChangeListener?.Invoke(_state);
                 _lastTargetPlayerPosition = _player.position;
                 _agent.SetDestination(_lastTargetPlayerPosition);
                 _agent.updateRotation = true;
@@ -116,6 +119,7 @@ public class BuddyBattleBehavior : MonoBehaviour
             else
             {
                 _state = BuddyState.Hiding;
+                OnStateChangeListener?.Invoke(_state);
                 _agent.updateRotation = true;
             }
         }
@@ -124,6 +128,7 @@ public class BuddyBattleBehavior : MonoBehaviour
             if (_playerInfo.IsCriticalHealth)
             {
                 _state = BuddyState.Healing;
+                OnStateChangeListener?.Invoke(_state);
                 _lastTargetPlayerPosition = _player.position;
                 _agent.SetDestination(_lastTargetPlayerPosition);
             }
@@ -133,6 +138,7 @@ public class BuddyBattleBehavior : MonoBehaviour
                 if (visibleEnemies.Count > 0)
                 {
                     _state = BuddyState.Attacking;
+                    OnStateChangeListener?.Invoke(_state);
                     _targetEnemy = FindEnemyToAttack(visibleEnemies).transform;
                     _agent.updateRotation = false;
                 }
