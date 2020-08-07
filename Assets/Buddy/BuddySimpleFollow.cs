@@ -126,7 +126,7 @@ public class BuddySimpleFollow : MonoBehaviour
 
     private bool IsValidFollowDestination(Vector3 target)
     {
-        return (target - _destination).sqrMagnitude > 0.5f;
+        return (target - _destination).sqrMagnitude > 1.0f;
     }
 
     private Vector3 GetWanderDestination()

@@ -239,6 +239,11 @@ public class BuddyBattleBehavior : MonoBehaviour
 
     List<EnemyAI> GetVisibileEnemies()
     {
+        if (EnemyAI.Instances == null)
+        {
+            return new List<EnemyAI>();
+        }
+
         var list = new List<EnemyAI>();
         foreach (var enemy in EnemyAI.Instances)
         {
